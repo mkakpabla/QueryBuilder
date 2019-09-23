@@ -1,0 +1,22 @@
+{
+    "name": "michel/query-builder",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Michel",
+            "email": "michel.akpabla2@gmail.com"
+        }
+    ],
+    "require": {
+        "phpunit/phpunit": "^8.3",
+        "squizlabs/php_codesniffer": "^3.4",
+        "symfony/var-dumper": "^4.3",
+      "ext-pdo": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zen\\Database\\": "src",
+            "Tests\\": "tests"
+        }
+    }
+}
