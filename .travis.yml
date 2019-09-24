@@ -7,12 +7,11 @@ services:
 
 env:
   - DB_USER=root
-  - DB_PASS=root
 
 before_script:
   - composer selfupdate
   - composer install
-  - mysql -u $DB_USER -p $DB_PASS < tests/database.sql
+  - mysql -u $DB_USER < tests/database.sql
 
 script:
   - ./vendor/bin/phpunit --colors

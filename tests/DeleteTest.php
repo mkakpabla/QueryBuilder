@@ -19,7 +19,7 @@ class DeleteTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = new PDO('mysql:host=localhost;dbname=blog', 'root', 'root', [
+        $this->pdo = new PDO('mysql:host=localhost;dbname=blog', 'root', '', [
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
