@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Database;
+namespace Zen\Database;
 
 class NoRecordException extends \Exception
 {

@@ -1,25 +1,26 @@
 <?php
 
 
-namespace Tests\Framework\Database;
+namespace Tests;
 
 use Framework\Database;
-use Framework\Database\Query;
+use PDO;
+use Zen\Database\Query;
 use PHPUnit\Framework\TestCase;
 
 class UpdateTest extends TestCase
 {
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $pdo;
 
     protected function setUp(): void
     {
-        $this->pdo = new \PDO('sqlite::memory:', null, null, [
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+        $this->pdo = new PDO('mysql:host=localhost;dbname=blog', 'root', 'root', [
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
     }
 

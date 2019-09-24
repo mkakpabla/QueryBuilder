@@ -3,12 +3,12 @@
 
 namespace Zen\Database\Queries;
 
+
 use Exception;
 use Zen\Database\Query;
 
-class Delete
+class Truncate
 {
-
     /**
      * @var Query
      */
@@ -24,19 +24,6 @@ class Delete
     {
         $this->query = $query;
         $this->table = $table;
-    }
-
-
-    /**
-     * Définit la condition de récupération
-     * @param array $condition
-     * @param string $separator
-     * @return Update
-     */
-    public function where(array $condition, $separator = 'AND'): self
-    {
-        $this->query->where($condition, $separator);
-        return $this;
     }
 
     /***
@@ -57,15 +44,10 @@ class Delete
      */
     public function __toString()
     {
-        $this->parts = ['DELETE FROM'];
+        $this->parts = ['TRUNCATE TABLE'];
         if ($this->table) {
             $this->parts[] = $this->query->buildFrom();
         }
-        if (!empty($this->query->where)) {
-            $this->parts[] = "WHERE";
-            $this->parts[] = "(" . join(') AND (', $this->query->where) . ')';
-        }
-
         return join(' ', $this->parts);
     }
 }

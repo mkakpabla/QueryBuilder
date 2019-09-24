@@ -3,6 +3,7 @@
 
 namespace Zen\Database\Queries;
 
+use Exception;
 use Zen\Database\Query;
 
 class Update
@@ -27,6 +28,8 @@ class Update
      */
     private $parts = [];
 
+    private $separator;
+
     public function __construct(Query $query, $table, array $inputs)
     {
         $this->query = $query;
@@ -36,11 +39,13 @@ class Update
 
     /**
      * Définit la condition de récupération
-     * @param array $conditions
+     * @param array $condition
+     * @param string $separator
      * @return Update
      */
-    public function where(array $condition): self
+    public function where(array $condition, $separator = 'AND'): self
     {
+        $this->separator = $separator;
         foreach ($condition as $key => $value) {
             $this->where[] = str_replace('?', $this->query->pdo->quote($value), $key);
         }
@@ -50,13 +55,13 @@ class Update
     /***
      * Permet d'executer la requete sql
      * @return int
-     * @throws \Exception
+     * @throws Exception
      */
     public function execute()
     {
         $query = $this->__toString();
         if (!in_array('WHERE', $this->parts)) {
-            throw new \Exception('Update queries must contain a WHERE clause to prevent unwanted data loss');
+            throw new Exception('Update queries must contain a WHERE clause to prevent unwanted data loss');
         }
         $statement = $this->query->pdo->prepare($query);
         $statement->execute(array_values($this->inputs));
@@ -71,7 +76,7 @@ class Update
     {
         $this->parts = ['UPDATE'];
         if ($this->table) {
-            $this->parts[] = $this->table;
+            $this->parts[] = $this->query->buildFrom();
         }
         $this->parts[] = 'SET';
         if ($this->inputs) {
@@ -79,7 +84,7 @@ class Update
         }
         if (!empty($this->where)) {
             $this->parts[] = "WHERE";
-            $this->parts[] = "(" . join(') AND (', $this->where) . ')';
+            $this->parts[] = "(" . join(') '.$this->separator.' (', $this->where) . ')';
         }
         return join(' ', $this->parts);
     }

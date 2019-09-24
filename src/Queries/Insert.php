@@ -18,7 +18,7 @@ class Insert
      */
     private $inputs;
 
-    public function __construct(Query $query, string $table, array $inputs)
+    public function __construct(Query $query, $table, array $inputs)
     {
         $this->query = $query;
         $this->table = $table;
@@ -37,7 +37,7 @@ class Insert
     {
         $parts = ['INSERT INTO'];
         if ($this->table) {
-            $parts[] = $this->table;
+            $parts[] = $this->query->buildFrom();
         }
         if ($this->inputs) {
             $parts[] = $this->buildColumnPart();

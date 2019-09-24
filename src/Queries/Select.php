@@ -1,14 +1,17 @@
 <?php
 
-namespace Framework\Database\Queries;
+namespace Zen\Database\Queries;
 
-use Zen\Database\Query;
+use Exception;
 use PDO;
+use PDOStatement;
+use Zen\Database\NoRecordException;
+use Zen\Database\Query;
 
 class Select
 {
 
-
+    private $select;
 
     private $where = [];
 
@@ -20,34 +23,25 @@ class Select
 
     private $joins;
 
-
     private $params = [];
-    /**
-     * @var string
-     */
-    private $table;
     /**
      * @var Query
      */
     private $query;
-    /**
-     * @var array
-     */
-    private $columns;
+    private $table;
 
-
-    public function __construct(Query $query, string $table, array $columns = ['*'])
+    public function __construct(Query $query, $table, $fields)
     {
         $this->query = $query;
         $this->table = $table;
-        $this->columns = $columns;
+        $this->select = $fields;
     }
 
     /**
      * Spécifie la limite
      * @param int $length
      * @param int $offset
-     * @return Query
+     * @return Select
      */
     public function limit(int $length, int $offset = 0): self
     {
@@ -58,7 +52,7 @@ class Select
     /**
      * Spécifie l'ordre de récupération
      * @param string $order
-     * @return Query
+     * @return Select
      */
     public function order(string $order): self
     {
@@ -71,7 +65,7 @@ class Select
      * @param string $table
      * @param string $condition
      * @param string $type
-     * @return Query
+     * @return Select
      */
     public function join(string $table, string $condition, string $type = "left"): self
     {
@@ -81,30 +75,30 @@ class Select
 
     /**
      * Définit la condition de récupération
-     * @param array $conditions
-     * @return Query
+     * @param array $condition
+     * @param string $separator
+     * @return Update
      */
-    public function where(string ...$conditions): self
+    public function where(array $condition, $separator = 'AND'): self
     {
-        $this->where = array_merge($this->where, $conditions);
+        $this->query->where($condition, $separator);
         return $this;
     }
 
     /**
      * Execute un COUNT() et renvoie la colonne
      * @return int
-     * @throws \Exception
      */
     public function count(): int
     {
-        $query = clone $this;
-        return $query->select("COUNT($this->table.id)")->execute()->fetchColumn();
+        $table = current($this->table);
+        return $this->query->select("COUNT($table.id)")->execute()->fetchColumn();
     }
 
     /**
      * Définit les paramètre pour la requête
      * @param array $params
-     * @return Query
+     * @return Select
      */
     public function params(array $params): self
     {
@@ -115,7 +109,7 @@ class Select
     /**
      * Spécifie l'entité à utiliser
      * @param string $entity
-     * @return Query
+     * @return Select
      */
     public function into(string $entity): self
     {
@@ -154,58 +148,33 @@ class Select
 
     /**
      * Lance la requête
-     * @return Collection
-     * @throws \Exception
+     * @return array
+     * @throws Exception
      */
-    public function fetchAll(): Collection
+    public function fetchAll(): array
     {
         if ($this->entity) {
             $exc = $this->execute();
             $exc->setFetchMode(PDO::FETCH_CLASS, $this->entity);
-            return new Collection(
-                $exc->fetchAll()
-            );
+            $exc->fetchAll();
         }
-        return new Collection(
-            $this->execute()->fetchAll()
-        );
+        return $this->execute()->fetchAll();
     }
-
-
-    /**
-     * Exécute la requête
-     * @return string
-     * @throws \Exception
-     */
-    private function execute()
-    {
-        $query = $this->__toString();
-        if (!empty($this->params)) {
-            $statement = $this->query->pdo->prepare($query);
-            $statement->execute($this->params);
-            return $statement;
-        }
-        $statement = $this->query->pdo->prepare($query);
-        $statement->execute();
-        return $statement;
-    }
-
 
     /**
      * Génère la requête SQL
      * @return string
-     * @throws \Exception
      */
     public function __toString()
     {
         $parts = ['SELECT'];
-        if ($this->columns) {
-            $parts[] = join(', ', $this->columns);
+        if ($this->select) {
+            $parts[] = join(', ', $this->select);
         } else {
             $parts[] = '*';
         }
         $parts[] = 'FROM';
-        $parts[] = $this->table;
+        $parts[] = $this->query->buildFrom();
         if (!empty($this->joins)) {
             foreach ($this->joins as $type => $joins) {
                 foreach ($joins as [$table, $condition]) {
@@ -213,9 +182,9 @@ class Select
                 }
             }
         }
-        if (!empty($this->where)) {
+        if (!empty($this->query->where)) {
             $parts[] = "WHERE";
-            $parts[] = "(" . join(') AND (', $this->where) . ')';
+            $parts[] = "(" . join(') AND (', $this->query->where) . ')';
         }
         if (!empty($this->order)) {
             $parts[] = 'ORDER BY';
@@ -225,5 +194,20 @@ class Select
             $parts[] = 'LIMIT ' . $this->limit;
         }
         return join(' ', $parts);
+    }
+
+    /**
+     * Exécute la requête
+     * @return PDOStatement
+     */
+    private function execute()
+    {
+        $query = $this->__toString();
+        if (!empty($this->params)) {
+            $statement = $this->query->pdo->prepare($query);
+            $statement->execute($this->params);
+            return $statement;
+        }
+        return $this->query->pdo->query($query);
     }
 }
