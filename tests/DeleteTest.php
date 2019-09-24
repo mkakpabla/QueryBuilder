@@ -3,7 +3,6 @@
 
 namespace Tests;
 
-
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Zen\Database\Query;
@@ -47,5 +46,4 @@ class DeleteTest extends TestCase
             ->delete()->execute();
         $this->assertEquals("DELETE FROM posts WHERE (id = '2')", (string)$query);
     }*/
-
 }

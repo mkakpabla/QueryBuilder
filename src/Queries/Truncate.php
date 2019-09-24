@@ -3,7 +3,6 @@
 
 namespace Zen\Database\Queries;
 
-
 use Exception;
 use Zen\Database\Query;
 
